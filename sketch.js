@@ -3,41 +3,48 @@
  * Learn more about the ml5.js project: https://ml5js.org/
  * ml5.js license and Code of Conduct: https://github.com/ml5js/ml5-next-gen/blob/main/LICENSE.md
  *
- * This example demonstrates detecting objects in an image through ml5.imageClassifier.
+ * This example demonstrates detecting objects in a live video through ml5.imageClassifier + Teachable Machine.
  */
 
-// Initialize the Image Classifier method with MobileNet. A callback needs to be passed.
+// A variable to initialize the Image Classifier
 let classifier;
 
-// A variable to hold the image we want to classify
-let img;
+// A variable to hold the video we want to classify
+let video;
 
-// Variables for displaying the results on the canvas
-let label = "";
-let confidence = "";
+// Variable for displaying the results on the canvas
+let label = "Model loading...";
+
+let imageModelURL = "https://teachablemachine.withgoogle.com/models/D3HB8wp4C/";
 
 function preload() {
-  classifier = ml5.imageClassifier("MobileNet");
-  img = loadImage("images/bird.jpg");
+  classifier = ml5.imageClassifier(imageModelURL + "model.json");
 }
 
 function setup() {
-  createCanvas(400, 400);
-  classifier.classify(img, gotResult);
-  image(img, 0, 0, width, height);
+  createCanvas(640, 480);
+
+  // Create the webcam video and hide it
+  video = createCapture(VIDEO, { flipped: true });
+  video.size(640, 480);
+  video.hide();
+
+  // Start detecting objects in the video
+  classifier.classifyStart(video, gotResult);
 }
 
-// Callback function for when classification has finished
-function gotResult(results) {
-  // The results are in an array ordered by confidence
-  console.log(results);
+function draw() {
+  // Each video frame is painted on the canvas
+  image(video, 0, 0);
 
-  // Display the results on the canvas
-  fill(255);
-  stroke(0);
-  textSize(18);
-  label = "Label: " + results[0].label;
-  confidence = "Confidence: " + nf(results[0].confidence, 0, 2);
-  text(label, 10, 360);
-  text(confidence, 10, 380);
+  // Printing class with the highest probability on the canvas
+  fill(0, 255, 0);
+  textSize(32);
+  text(label, 20, 50);
+}
+
+// A function to run when we get the results
+function gotResult(results) {
+  // Update label variable which is displayed on the canvas
+  label = results[0].label;
 }
